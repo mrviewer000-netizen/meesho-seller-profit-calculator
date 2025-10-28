@@ -1,0 +1,184 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meesho Seller Profit Calculator</title>
+  <style>
+    :root{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --meesho-pink: #ff3f6c;
+      --meesho-gradient: linear-gradient(135deg, #ff3f6c, #ff6589);
+      --bg: #fff7f9;
+      --text: #1f1f1f;
+      --muted: #6b7280;
+      --card-bg: #ffffff;
+    }
+    body{ margin:0; padding:24px; background:var(--bg); color:var(--text); }
+    .container{ max-width:820px; margin:20px auto; }
+    header{ display:flex; gap:16px; align-items:center; margin-bottom:18px; }
+    .logo{
+      width:60px;height:60px;border-radius:12px;background:var(--meesho-gradient);
+      display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:22px;
+      box-shadow:0 6px 18px rgba(255,63,108,0.3);
+    }
+    h1{ font-size:22px; margin:0; color:#ff3f6c; }
+    p.lead{ margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .card{ background:var(--card-bg); padding:18px; border-radius:14px; box-shadow:0 8px 24px rgba(255,63,108,.08); }
+    .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
+    input[type="number"], select{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ffd1db; font-size:15px; }
+    .full{ grid-column: 1 / -1; }
+    .btn{ display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:10px; cursor:pointer; border:0; font-weight:600; }
+    .btn-primary{ background:var(--meesho-gradient); color:white; box-shadow:0 6px 18px rgba(255,63,108,.25); }
+    .btn-muted{ background:#ffe9ef; color:var(--meesho-pink); }
+    .results{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
+    .stat{ padding:12px; background:#fff0f4; border-radius:10px; text-align:center; border:1px solid #ffd9e1; }
+    .stat .num{ font-size:18px; font-weight:700; margin-top:8px; color:#ff3f6c; }
+    .tiny{ font-size:12px; color:var(--muted); }
+    .note{ margin-top:10px; color:var(--muted); font-size:13px; }
+    footer{ margin-top:18px; color:var(--muted); font-size:13px; text-align:center; }
+    table{ width:100%; border-collapse:collapse; font-size:13px; }
+    th,td{ text-align:left; padding:8px 6px; border-bottom:1px solid #ffe0e8; }
+    th{ background:#fff1f5; }
+    @media (max-width:640px){ .grid{ grid-template-columns:1fr; } .results{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">M</div>
+      <div>
+        <h1>Meesho Seller Profit Calculator</h1>
+        <p class="lead">Instantly calculate Meesho commission, profit, and profit percentage — no shipping charges included.</p>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label>Product Cost (₹)</label>
+          <input id="cost" type="number" min="0" step="0.01" value="100" />
+        </div>
+        <div>
+          <label>Selling Price (₹)</label>
+          <input id="price" type="number" min="0" step="0.01" value="200" />
+        </div>
+        <div>
+          <label>Category</label>
+          <select id="category">
+            <option value="clothing">Clothing & Shoes (15%)</option>
+            <option value="kitchen">Kitchen / Home (12%)</option>
+            <option value="grocery">Masala / Grocery (10%)</option>
+            <option value="cosmetics">Cosmetics (18%)</option>
+            <option value="electronics">Electronics (18%)</option>
+            <option value="other">Other (15%)</option>
+          </select>
+        </div>
+        <div>
+          <label>Commission % (editable)</label>
+          <input id="commission" type="number" min="0" step="0.01" value="15" />
+        </div>
+        <div>
+          <label>Target Profit % (optional)</label>
+          <input id="targetProfit" type="number" min="0" step="0.01" placeholder="e.g. 40" />
+        </div>
+        <div class="full">
+          <button id="calc" class="btn btn-primary">Calculate Profit</button>
+          <button id="save" class="btn btn-muted">Save Entry</button>
+          <button id="export" class="btn btn-muted">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="results" id="results" style="display:none">
+        <div class="stat"><div class="tiny">Meesho Commission (₹)</div><div class="num" id="commAmount">₹0.00</div></div>
+        <div class="stat"><div class="tiny">Net Profit (₹)</div><div class="num" id="profit">₹0.00</div></div>
+        <div class="stat"><div class="tiny">Profit %</div><div class="num" id="profitPerc">0%</div></div>
+      </div>
+
+      <div id="suggestion" class="note" style="display:none;"></div>
+
+      <h3 style="margin-top:20px;color:#ff3f6c;">History</h3>
+      <table id="historyTable">
+        <thead><tr><th>Date</th><th>Category</th><th>CP</th><th>SP</th><th>Comm(%)</th><th>Comm(₹)</th><th>Profit(₹)</th><th>Profit%</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="note">Note: Shipping cost is managed by Meesho. Adjust commission % based on your product category.</div>
+    </div>
+    <footer>Made for Wasim — Meesho Seller Profit Calculator (by WAISM)</footer>
+  </div>
+
+  <script>
+    const defaults = { clothing:15, kitchen:12, grocery:10, cosmetics:18, electronics:18, other:15 };
+    const $ = id => document.getElementById(id);
+    const costEl=$('cost'), priceEl=$('price'), catEl=$('category'), commEl=$('commission');
+    const targetEl=$('targetProfit'), commAmt=$('commAmount'), profitEl=$('profit'), profitPerc=$('profitPerc');
+    const results=$('results'), suggestion=$('suggestion'), tableBody=document.querySelector('#historyTable tbody');
+
+    function formatMoney(v){return '₹'+Number(v).toFixed(2);}
+    function pct(v){return Number(v).toFixed(2)+'%';}
+    catEl.addEventListener('change',()=>commEl.value=defaults[catEl.value]);
+
+    function calculate(){
+      const cp=parseFloat(costEl.value)||0, sp=parseFloat(priceEl.value)||0, cPct=parseFloat(commEl.value)||0;
+      const cAmt=sp*(cPct/100), profit=sp-cp-cAmt, pPerc=cp>0?(profit/cp)*100:0;
+      return {cp,sp,cPct,cAmt,profit,pPerc};
+    }
+
+    function render(){
+      const r=calculate();
+      commAmt.textContent=formatMoney(r.cAmt);
+      profitEl.textContent=formatMoney(r.profit);
+      profitPerc.textContent=pct(r.pPerc);
+      results.style.display='grid';
+      return r;
+    }
+
+    function suggestTarget(){
+      const cp=parseFloat(costEl.value)||0, cPct=parseFloat(commEl.value)||0, target=parseFloat(targetEl.value)||0;
+      if(target>0 && cp>0){
+        const sp=cp*(1+target/100)/(1-cPct/100);
+        suggestion.style.display='block';
+        suggestion.innerHTML=`To get <b>${target}%</b> profit, sell at <b>₹${sp.toFixed(2)}</b>`;
+      } else suggestion.style.display='none';
+    }
+
+    $('calc').addEventListener('click',()=>{render();suggestTarget();saveHistory();});
+
+    function saveHistory(){
+      const r=calculate(), catTxt=catEl.options[catEl.selectedIndex].text;
+      const item={d:new Date().toLocaleString(),cat:catTxt,cp:r.cp,sp:r.sp,cPct:r.cPct,cAmt:r.cAmt,p:r.profit,pP:r.pPerc};
+      const arr=JSON.parse(localStorage.getItem('meesho_history')||'[]');
+      arr.unshift(item);if(arr.length>100)arr.pop();
+      localStorage.setItem('meesho_history',JSON.stringify(arr));
+      renderHistory();
+    }
+
+    function renderHistory(){
+      const arr=JSON.parse(localStorage.getItem('meesho_history')||'[]');
+      tableBody.innerHTML='';
+      arr.forEach(a=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${a.d}</td><td>${a.cat}</td><td>₹${a.cp}</td><td>₹${a.sp}</td><td>${a.cPct}%</td><td>₹${a.cAmt}</td><td>₹${a.p}</td><td>${a.pP.toFixed(2)}%</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    $('export').addEventListener('click',()=>{
+      const arr=JSON.parse(localStorage.getItem('meesho_history')||'[]');
+      if(!arr.length){alert('No history to export');return;}
+      const header=['Date','Category','CP','SP','Comm%','Comm(₹)','Profit(₹)','Profit%'];
+      const rows=arr.map(a=>[a.d,a.cat,a.cp,a.sp,a.cPct,a.cAmt,a.p,a.pP]);
+      const csv=[header,...rows].map(r=>r.join(',')).join('\\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');
+      a.href=url;a.download='Meesho_Seller_Profit_History.csv';a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    });
+
+    renderHistory();
+  </script>
+</body>
+</html>
